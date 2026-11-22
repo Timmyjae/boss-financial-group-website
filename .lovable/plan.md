@@ -13,7 +13,8 @@ Netlify configuration (added and tested in Milestone 1):
 - Milestone 1 exit test: a real Netlify deploy from GitHub of the actual project, with the Home page loading and a small test server function (a "health check" that returns the server time) answering on the live Netlify URL. If the test fails, the configuration is fixed before Milestone 2 starts.
 
 How the backend keeps working on Netlify:
-- The contact form calls a server function. That function saves the enquiry to Lovable Cloud using the public (publishable) Cloud URL and key, under an "insert only" security rule. No admin key leaves Lovable.
+- The contact form calls a server function. That function saves the enquiry to Lovable Cloud using the public (publishable) Cloud URL and key, under an "insert only" security rule.
+- The Lovable Cloud server key (`SUPABASE_SERVICE_ROLE_KEY`) is needed on Netlify for one purpose only: updating the notification fields on the enquiry that was just saved. It is stored only as a Netlify server-side environment variable (Functions scope, marked secret). It never has a `VITE_` prefix, is never in browser code, `netlify.toml`, `.env` or GitHub, and is read only inside that one server step.
 - The same function sends the notification email using a secret API key that only the server can read.
 
 Netlify environment variables (set under Functions + Builds scope; a redeploy is needed after any change):
@@ -62,7 +63,13 @@ Table `contact_submissions`:
 
 Access rules:
 - The public website can only **insert**, and only with `notification_status = 'pending'` and no `notification_sent_at`. Visitors cannot read, edit or delete records.
-- Only trusted server code can update the notification fields. This uses the Lovable Cloud server key, stored as a server-only secret (`SUPABASE_SERVICE_ROLE_KEY`) in Lovable and Netlify. It is never sent to the browser and is used only inside the contact server function, after the enquiry is saved. No public update rule or callable function exists.
+- Only trusted server code can update the notification fields, using the server key described in section 1. The key is loaded only inside a single helper, `markNotification(id, status)`. That helper updates only `notification_status` and `notification_sent_at` for one id. No public update rule or callable database function exists.
+
+Reliability order (the enquiry is never lost because of email):
+1. Validate. Invalid input is rejected with a clear message.
+2. Save the enquiry (status `pending`). If the save fails, the visitor sees an error and can try again. This is the only case that is reported as a failure.
+3. Try to send the email (10-second timeout). Any provider error, timeout or missing configuration is caught. It never undoes the save or changes the visitor's success message.
+4. Record the result: `sent` + time, `failed`, or `not_configured`. If even this update fails, the enquiry stays saved as `pending`, which shows that it needs a follow-up.
 - Saved enquiries and their notification status are visible in the Cloud tab.
 - Validation and length limits on the server, a hidden spam trap field, and a disabled button while sending.
 
@@ -87,12 +94,16 @@ Honesty rules:
 ## 7. Scope guard
 No logins, portals, payments, booking, calculators, CRM or other extras.
 
-## 8. Dependencies needed from you
-1. Resend account + API key (and the recipient email used for testing).
-2. A Netlify account linked to the GitHub repository.
-3. GitHub connection (in Lovable: Connectors → GitHub).
-4. Optional: logo file, approved Suzanne White photo, confirmed bios.
-5. Production only: the client's DNS access or info@theinsboss.com mailbox (section 6).
+## 8. External accounts and access (possible blockers)
+| Needed | Who | Blocks |
+|---|---|---|
+| GitHub account, connected in Lovable (Connectors > GitHub) | Group | Milestone 1 |
+| Netlify account with access to that GitHub repo | Group | Milestone 1 exit test |
+| Permission to set Netlify environment variables, including secrets | Group | Milestones 1 and 7 |
+| Resend account + API key; its owner email used as the test inbox | Group | Milestone 5 |
+| Lovable Cloud server key copied into Netlify (I will explain where to find it) | Group | Milestone 7 live test |
+| Logo, Suzanne White photo, confirmed bios | Client (optional) | Not blocking |
+| DNS for theinsboss.com or the info@ mailbox | Client | Only for switching notifications to the business inbox after V1 |
 
 ## 9. Milestones (one at a time, review after each)
 1. Design system, shared menu/footer, Home page, Netlify plugin config, and a successful live Netlify deploy with a working test server function.
@@ -101,7 +112,13 @@ No logins, portals, payments, booking, calculators, CRM or other extras.
 4. Contact page (form design and validation).
 5. Lovable Cloud table and security rules, saving enquiries, Resend notification; test with real data and check the Cloud tab and inbox.
 6. SEO (unique titles and descriptions, social tags, favicon), accessibility, responsive refinements.
-7. GitHub sync check, final Netlify deployment with environment variables, full QA: links, form on live Netlify, mobile/tablet/desktop.
+7. GitHub sync check, final Netlify deployment with environment variables, full QA on the **live Netlify website** (not only the Lovable preview):
+   - Submit a real test enquiry on the Netlify URL, then confirm it appears in the Lovable Cloud tab with status `sent` and a sent time.
+   - Confirm the notification arrives in the configured test inbox.
+   - Failure test: temporarily remove the email key, then confirm the enquiry is still saved with status `not_configured` (or `failed` when an invalid key is used).
+   - Check links and the mobile, tablet and desktop layouts.
+
+Mandatory Milestone 1 exit condition: a live Netlify deploy from GitHub with a working server-function health check. Milestone 2 does not start until this passes.
 
 ## Technical details
 - Components: SiteHeader, SiteFooter, Button variants, ServiceCard, CtaSection, LeaderProfile (optional `photo` prop), Testimonial, ContactForm.
