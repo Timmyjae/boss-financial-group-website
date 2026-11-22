@@ -3,11 +3,14 @@
 ## 1. Confirmed architecture (Netlify-compatible)
 TanStack Start (React + TypeScript + Tailwind) is kept. Netlify is TanStack Start's official deployment partner and runs its pages, server functions and server routes on Netlify Functions ([1](https://docs.netlify.com/build/frameworks/framework-setup-guides/tanstack-start/), [3](https://tanstack.com/partners/netlify)). No simpler stack is needed.
 
-Netlify configuration (added to the repo in Milestone 1, so it is not left until the end):
-- `netlify.toml` with build command `npm run build` (or `bun run build`) and the build target set to Netlify (`NITRO_PRESET=netlify`). The project's build defaults to Cloudflare, so this setting is required.
-- Publish directory: `dist` (static files). Server code goes to Netlify Functions automatically. No `_redirects` / SPA catch-all rule, because it would break server pages.
-- Node 20+ on Netlify.
-- A test Netlify build in Milestone 1 proves that the pages and one server function work before any more pages are built.
+Confirmed version: this project uses **TanStack Start 1.168.60** (with TanStack Router 1.170 and Vite 8). That is newer than 1.132.0, so the official Netlify method applies.
+
+Netlify configuration (added and tested in Milestone 1):
+- Install `@netlify/vite-plugin-tanstack-start` and add `netlify()` to `vite.config.ts`.
+- The Lovable build setup normally adds its own Cloudflare server packaging. For Netlify builds only (detected by Netlify's `NETLIFY` build variable), that packaging is switched off and `netlify()` is used instead. The Lovable preview keeps working unchanged. This prevents two deployment plugins from conflicting.
+- `netlify.toml`: build command `vite build` (run as `npm run build`), publish directory `dist/client`, Node 20+. There is no `_redirects` catch-all rule.
+- Pages, server functions and server routes become Netlify Functions automatically.
+- Milestone 1 exit test: a real Netlify deploy from GitHub of the actual project, with the Home page loading and a small test server function (a "health check" that returns the server time) answering on the live Netlify URL. If the test fails, the configuration is fixed before Milestone 2 starts.
 
 How the backend keeps working on Netlify:
 - The contact form calls a server function. That function saves the enquiry to Lovable Cloud using the public (publishable) Cloud URL and key, under an "insert only" security rule. No admin key leaves Lovable.
@@ -21,6 +24,7 @@ Netlify environment variables (set under Functions + Builds scope; a redeploy is
 | RESEND_API_KEY | Email sending | Yes |
 | NOTIFY_TO_EMAIL | Address that receives enquiries | No |
 | NOTIFY_FROM_EMAIL | Sender address | No |
+| SUPABASE_SERVICE_ROLE_KEY | Lets only the server update notification status | Yes |
 The same secrets are stored in Lovable for the preview.
 
 ## 2. Pages (four only)
@@ -44,8 +48,22 @@ Shared menu (mobile menu, "Let's Talk" button) and footer.
 Navy palette from the brief (deep navy, midnight navy, white, soft ivory, sparing champagne gold, charcoal/slate text). Playfair Display headings with a refined sans body font. Real company photography first, then realistic professional business photos. Editorial layout, restrained animation, designed for phone, tablet and desktop.
 
 ## 5. Contact database (Lovable Cloud)
-- Table `contact_submissions`: id, full_name, email, subject (optional), message, created_at.
-- Visitors can only add a record; nobody can read, edit or delete through the public site. Saved enquiries are visible in the Cloud tab.
+Table `contact_submissions`:
+| Column | Type | Notes |
+|---|---|---|
+| id | UUID | primary key |
+| full_name | text | required |
+| email | text | required |
+| subject | text | optional |
+| message | text | required |
+| created_at | timestamp | automatic |
+| notification_status | text | `pending`, `sent`, `failed` or `not_configured`; default `pending`; limited to these values |
+| notification_sent_at | timestamp | set only when the email provider accepts the message |
+
+Access rules:
+- The public website can only **insert**, and only with `notification_status = 'pending'` and no `notification_sent_at`. Visitors cannot read, edit or delete records.
+- Only trusted server code can update the notification fields. This uses the Lovable Cloud server key, stored as a server-only secret (`SUPABASE_SERVICE_ROLE_KEY`) in Lovable and Netlify. It is never sent to the browser and is used only inside the contact server function, after the enquiry is saved. No public update rule or callable function exists.
+- Saved enquiries and their notification status are visible in the Cloud tab.
 - Validation and length limits on the server, a hidden spam trap field, and a disabled button while sending.
 
 ## 6. Email notification — recommended setup
@@ -64,7 +82,7 @@ For production, the client either (a) verifies theinsboss.com in Resend (a few D
 
 Honesty rules:
 - The visitor sees success once the enquiry is saved. The page never says an email was sent.
-- The send result is recorded on the saved enquiry (`notification_status`: sent / failed / not_configured) and shown in the Cloud tab. This proves delivery and shows any failures.
+- After the email attempt, the server records `sent` (with `notification_sent_at`), `failed` or `not_configured` on the saved enquiry.
 
 ## 7. Scope guard
 No logins, portals, payments, booking, calculators, CRM or other extras.
@@ -77,7 +95,7 @@ No logins, portals, payments, booking, calculators, CRM or other extras.
 5. Production only: the client's DNS access or info@theinsboss.com mailbox (section 6).
 
 ## 9. Milestones (one at a time, review after each)
-1. Design system, shared menu/footer, Home page, Netlify config + a test Netlify build.
+1. Design system, shared menu/footer, Home page, Netlify plugin config, and a successful live Netlify deploy with a working test server function.
 2. About page.
 3. Services page.
 4. Contact page (form design and validation).
@@ -87,5 +105,6 @@ No logins, portals, payments, booking, calculators, CRM or other extras.
 
 ## Technical details
 - Components: SiteHeader, SiteFooter, Button variants, ServiceCard, CtaSection, LeaderProfile (optional `photo` prop), Testimonial, ContactForm.
-- `submitContact` createServerFn: zod validation, honeypot check, insert via a per-request publishable client (RLS: anon INSERT only, GRANT INSERT to anon). A narrow SECURITY DEFINER function updates notification_status, so no service-role key is needed on Netlify. Resend is called with fetch (Worker/Netlify-safe, no SDK).
+- `submitContact` createServerFn: zod validation, honeypot check; insert via a per-request publishable client (RLS: anon INSERT only, WITH CHECK notification_status = 'pending' AND notification_sent_at IS NULL; GRANT INSERT to anon, no SELECT/UPDATE/DELETE grants or policies). The insert returns the id through a server-generated UUID (no anon SELECT needed). Notification update uses supabaseAdmin loaded inside the handler (service_role only). CHECK constraint on notification_status. Resend is called with fetch, without an SDK.
+- vite.config.ts: `nitro: process.env.NETLIFY ? false : undefined`, `plugins: process.env.NETLIFY ? [netlify()] : []`.
 - Per-route head() metadata; images stored as Lovable assets, lazy-loaded below the fold.
