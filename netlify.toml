@@ -1,0 +1,9 @@
+# Netlify production build for the BOSS Financial Group site (TanStack Start + Netlify Vite plugin).
+# Pages, server functions and server routes are emitted as Netlify Functions automatically.
+# Do NOT add a "/* /index.html 200" redirect: it would break server-rendered pages.
+[build]
+  command = "npm run build"
+  publish = "dist/client"
+
+[build.environment]
+  NODE_VERSION = "22"
