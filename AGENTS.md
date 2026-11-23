@@ -28,3 +28,9 @@ use the editor.
   own key and store it in Secrets.
 - **Secrets.** Lovable manages them. Do not put secret values in the repo.
 <!-- LOVABLE:END -->
+
+## Project rules
+- All site copy lives in `src/content/site.ts` (leaders in `src/components/site/leaders.ts`); pages import it rather than hard-coding text, so content edits happen in one place.
+- Images are bundled from `src/assets/` (not Lovable CDN asset pointers) because the site is deployed on Netlify, where `/__l5e/` asset URLs do not resolve.
+- Deployment target is Netlify: `netlify()` plugin and disabled Cloudflare packaging apply only when `process.env.NETLIFY` is set, so the Lovable preview stays unchanged.
+- A leader without an approved photo renders an initials monogram; adding `photo`/`photoAlt` in `leaders.ts` is the only change needed later.
