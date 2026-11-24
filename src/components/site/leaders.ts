@@ -13,5 +13,6 @@ export const leaders: Leader[] = [
     // Text-only until an approved photograph is provided: add `photo` and `photoAlt` here.
     name: "Suzanne Q. White",
     title: "CEO, BOSS Insurance Group",
+    focus: "Property & Casualty",
   },
 ];

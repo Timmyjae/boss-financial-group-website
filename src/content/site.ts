@@ -117,6 +117,10 @@ export type Leader = {
   photo?: string;
   photoAlt?: string;
   quote?: string;
+  /** Area of focus, shown on the About page. */
+  focus?: string;
+  /** Verified biography only — leave unset until the client confirms one. */
+  bio?: string;
 };
 
 export const testimonials = [
@@ -127,3 +131,36 @@ export const testimonials = [
 ] as const;
 
 export const testimonialAttribution = "Client Testimonial";
+
+// About page copy — from theinsboss.com "About us" and "BOSS Financial Group History" pages.
+export const about = {
+  intro:
+    "Business Owner Solution Strategies was formed because too few experts were working on financial solutions for business owners. Business owners have to be experts in the business and services they provide. They need someone working for them.",
+  collaboration:
+    "Our team works together to put in place an insurance and financial plan that moves toward a complete business financial planning solution. If you were to climb a mountain, you would need a set of tools. Coming down the mountain may take a different set. We make sure your bags are packed correctly, so the climb and the descent are as effective as possible. You have to plan for today, tomorrow and the exit, all within the same plan.",
+  founderQuote: {
+    text: "We wanted to create a place where people get the opportunity to grow as individuals with the benefits of an organization. I think we have done just that.",
+    by: "Brent White",
+  },
+  purpose:
+    "Decisions that business owners make today about insurance and financial services are often made without clear direction and organization. We believe in making decisions with a clear purpose.",
+  history: [
+    {
+      title: "The Four Pillars were created",
+      body: "The Four Pillar concept began as a one-page snapshot of Protection, Assets, Reserves and Exit Strategy. The model was done entirely on paper.",
+    },
+    {
+      title: "BOSS was formed",
+      body: "Brent and Suzanne White left corporate America to create a new culture for advisors to work at high levels with business owners.",
+    },
+    {
+      title: "Financial Four Square evolved",
+      body: "Over the course of three years, version 1 of Financial Four Square was created, and the company found its clear direction.",
+    },
+    {
+      title: "The BOSS family was born",
+      body: "Four divisions of BOSS Financial Group were created: BOSS Insurance Group, BOSS Economics Group, BOSS Benefits and BOSS IMO.",
+    },
+  ],
+  teamMotto: "Together Everyone Achieves More.",
+} as const;

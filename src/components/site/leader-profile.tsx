@@ -8,7 +8,7 @@ function initials(name: string) {
     .join("");
 }
 
-export function LeaderProfile({ leader }: { leader: Leader }) {
+export function LeaderProfile({ leader, detailed = false }: { leader: Leader; detailed?: boolean }) {
   return (
     <article className="flex flex-col">
       <div className="relative aspect-[4/5] overflow-hidden bg-ivory">
@@ -31,6 +31,8 @@ export function LeaderProfile({ leader }: { leader: Leader }) {
       </div>
       <h3 className="mt-6 text-2xl text-navy">{leader.name}</h3>
       <p className="mt-1 text-sm font-semibold uppercase tracking-[0.16em] text-gold">{leader.title}</p>
+      {detailed && leader.focus && <p className="mt-3 text-muted-foreground">Focus: {leader.focus}</p>}
+      {detailed && leader.bio && <p className="mt-4 text-muted-foreground">{leader.bio}</p>}
       {leader.quote && <p className="mt-4 italic text-muted-foreground">“{leader.quote}”</p>}
     </article>
   );
