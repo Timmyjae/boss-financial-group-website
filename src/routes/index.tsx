@@ -8,7 +8,7 @@ import { TestimonialCard } from "@/components/site/testimonial-card";
 import { CtaSection } from "@/components/site/cta-section";
 import { leaders } from "@/components/site/leaders";
 import { company, fourSquareIntro, pillars, services, stages, testimonials } from "@/content/site";
-import heroPhoto from "@/assets/hero-planning.webp";
+import heroPhoto from "@/assets/hero-advisors-meeting.webp";
 import teamPhoto from "@/assets/team-collaboration.webp";
 
 const title = "BOSS Financial Group | Strategic Financial Solutions for Business Owners";
@@ -73,9 +73,9 @@ function Home() {
             <div className="absolute -left-4 -top-4 hidden h-full w-full border border-gold/40 lg:block" aria-hidden="true" />
             <img
               src={heroPhoto}
-              alt="Business owner reviewing financial plans with an advisor"
-              width={1600}
-              height={1200}
+              alt="Advisors meeting with a client around a table to review a financial report"
+              width={1200}
+              height={800}
               fetchPriority="high"
               className="relative aspect-[4/3] w-full object-cover"
             />
