@@ -34,3 +34,4 @@ use the editor.
 - Images are bundled from `src/assets/` (not Lovable CDN asset pointers) because the site is deployed on Netlify, where `/__l5e/` asset URLs do not resolve.
 - Deployment target is Netlify: `netlify()` plugin and disabled Cloudflare packaging apply only when `process.env.NETLIFY` is set, so the Lovable preview stays unchanged.
 - A leader without an approved photo renders an initials monogram; adding `photo`/`photoAlt` in `leaders.ts` is the only change needed later.
+- Service detail copy is keyed by the existing service slugs separately from Home summaries; this preserves reviewed Home content while keeping cross-page anchors stable.
