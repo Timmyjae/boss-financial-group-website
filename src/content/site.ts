@@ -236,3 +236,22 @@ export const serviceDetails: Record<string, { paragraphs: string[]; focus: strin
     focus: ["Prepare for ownership transition early", "Consider taxes and potential sale income", "Keep the plan flexible as the business changes"],
   },
 };
+
+export const contactPage = {
+  title: "Contact BOSS Financial Group | Let's Talk",
+  description: "Contact BOSS Financial Group in Frisco, Texas to start a conversation about your business.",
+  eyebrow: "BOSS Financial Group",
+  heading: "Start a conversation.",
+  intro:
+    "Whether you are a business owner or a referral partner, we would welcome a conversation about where your business is today and where you want it to go.",
+  formTitle: "Send us a message",
+  detailsTitle: "Contact details",
+  submit: "Send Message",
+  sending: "Sending…",
+  savedTitle: "Thank you — your message has been received.",
+  savedBody: "A member of our team will be in touch.",
+  notConnectedTitle: "Your message has not been sent yet.",
+  notConnectedBody:
+    "Online enquiries are not switched on yet. Please call or email us directly using the details on this page.",
+  again: "Write another message",
+} as const;
