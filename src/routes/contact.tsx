@@ -26,7 +26,7 @@ export const Route = createFileRoute("/contact")({
 
 type Result = "saved" | "not_connected" | null;
 
-function Field({ id, label, required, error, children }: { id: string; label: string; required?: boolean; error?: string; children: React.ReactNode }) {
+function Field({ id, label, required, error, children }: { id: string; label: string; required?: boolean | undefined; error?: string | undefined; children: React.ReactNode }) {
   return (
     <div className="grid gap-2">
       <Label htmlFor={id} className="text-sm font-semibold text-navy">
